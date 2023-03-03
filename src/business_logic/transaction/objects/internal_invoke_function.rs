@@ -29,9 +29,7 @@ use felt::Felt;
 use getset::Getters;
 use num_traits::Zero;
 
-#[derive(Debug, Getters)]
 pub struct InternalInvokeFunction {
-    #[getset(get = "pub")]
     contract_address: Address,
     entry_point_selector: Felt,
     #[allow(dead_code)]
