@@ -165,6 +165,18 @@ impl TryFrom<&PathBuf> for ContractClass {
     }
 }
 
+impl TryFrom<String> for ContractClass {
+    type Error = io::Error;
+
+    fn try_from(contract: String) -> io::Result<Self> {
+        let raw_contract_class: starknet_api::state::ContractClass =
+            serde_json::from_str(&contract)?;
+
+        let contract_class = ContractClass::from(raw_contract_class);
+        Ok(contract_class)
+    }
+}
+
 fn convert_entry_points(
     entry_points: HashMap<starknet_api::state::EntryPointType, Vec<EntryPoint>>,
 ) -> HashMap<EntryPointType, Vec<ContractEntryPoint>> {
