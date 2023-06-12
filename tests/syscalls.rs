@@ -57,7 +57,7 @@ fn test_contract<'a>(
             10,
             0.into(),
             general_config.invoke_tx_max_n_steps(),
-            TRANSACTION_VERSION,
+            TRANSACTION_VERSION.clone(),
         )
     });
 
@@ -421,7 +421,7 @@ fn get_sequencer_address_syscall() {
 
 #[test]
 fn get_tx_info_syscall() {
-    let run = |version,
+    let run = |version: Felt252,
                account_contract_address: Address,
                max_fee,
                signature: Vec<Felt252>,
@@ -445,7 +445,7 @@ fn get_tx_info_syscall() {
                 max_fee,
                 3.into(),
                 n_steps,
-                version,
+                version.clone(),
             )),
             [],
             [],
@@ -455,7 +455,7 @@ fn get_tx_info_syscall() {
             [],
             [],
             [
-                version.into(),
+                version,
                 account_contract_address.0,
                 max_fee.into(),
                 signature.len().into(),
@@ -470,7 +470,7 @@ fn get_tx_info_syscall() {
     };
 
     run(
-        0,
+        0.into(),
         Address::default(),
         12,
         vec![],
@@ -478,7 +478,7 @@ fn get_tx_info_syscall() {
         StarknetChainId::TestNet,
     );
     run(
-        10,
+        10.into(),
         Address::default(),
         12,
         vec![],
@@ -486,7 +486,7 @@ fn get_tx_info_syscall() {
         StarknetChainId::TestNet,
     );
     run(
-        10,
+        10.into(),
         Address(1111.into()),
         12,
         vec![],
@@ -494,7 +494,7 @@ fn get_tx_info_syscall() {
         StarknetChainId::TestNet,
     );
     run(
-        10,
+        10.into(),
         Address(1111.into()),
         50,
         vec![],
@@ -502,7 +502,7 @@ fn get_tx_info_syscall() {
         StarknetChainId::TestNet,
     );
     run(
-        10,
+        10.into(),
         Address(1111.into()),
         50,
         [0x12, 0x34, 0x56, 0x78].map(Felt252::from).to_vec(),
@@ -510,7 +510,7 @@ fn get_tx_info_syscall() {
         StarknetChainId::TestNet,
     );
     run(
-        10,
+        10.into(),
         Address(1111.into()),
         50,
         [0x12, 0x34, 0x56, 0x78].map(Felt252::from).to_vec(),
@@ -518,7 +518,7 @@ fn get_tx_info_syscall() {
         StarknetChainId::TestNet,
     );
     run(
-        10,
+        10.into(),
         Address(1111.into()),
         50,
         [0x12, 0x34, 0x56, 0x78].map(Felt252::from).to_vec(),
@@ -547,7 +547,7 @@ fn get_tx_signature_syscall() {
                 12,
                 3.into(),
                 n_steps,
-                0,
+                0.into(),
             )),
             [],
             [],
