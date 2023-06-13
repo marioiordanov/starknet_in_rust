@@ -89,7 +89,7 @@ impl StarknetState {
             self.chain_id(),
             Address(Felt252::one()),
             0,
-            0,
+            0.into(),
             Vec::new(),
             0.into(),
             hash_value,
@@ -182,7 +182,7 @@ impl StarknetState {
             contract_class.clone(),
             constructor_calldata,
             chain_id,
-            TRANSACTION_VERSION,
+            TRANSACTION_VERSION.clone(),
             hash_value,
         )?);
 
@@ -278,7 +278,7 @@ impl StarknetState {
             contract_address,
             entry_point_selector,
             max_fee,
-            TRANSACTION_VERSION,
+            TRANSACTION_VERSION.clone(),
             calldata,
             signature,
             self.chain_id(),
