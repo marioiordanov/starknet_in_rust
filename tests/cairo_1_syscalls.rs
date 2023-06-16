@@ -2494,23 +2494,23 @@ fn duck_duck() {
 
         let program_data = include_bytes!("../contract_b.json");
         let sierra_class: SierraContractClass = serde_json::from_slice(program_data).unwrap();
-        let a_contract_class = CasmContractClass::from_contract_class(sierra_class, false).unwrap();
+        let b_contract_class = CasmContractClass::from_contract_class(sierra_class, false).unwrap();
     
-        let a_address = Address(felt_str!(
+        let b_address = Address(felt_str!(
             "2130449614087309992146828810340965483383114570091747539799843737140266351087"
         ));
-        let a_class_hash: ClassHash =
+        let b_class_hash: ClassHash =
             felt_str!("802624353088231488816884627621717971676208682927435467151080563415187453099")
                 .to_be_bytes();
-        let a_nonce = 8.into();
+        let b_nonce = 8.into();
     
-        contract_class_cache.insert(a_class_hash, a_contract_class);
+        contract_class_cache.insert(b_class_hash, b_contract_class);
         state_reader
             .address_to_class_hash_mut()
-            .insert(a_address.clone(), a_class_hash);
+            .insert(b_address.clone(), b_class_hash);
         state_reader
             .address_to_nonce_mut()
-            .insert(a_address, a_nonce);
+            .insert(b_address, b_nonce);
 
     // Create state from the state_reader and contract cache.
     let mut state = CachedState::new(state_reader, None, Some(contract_class_cache));
