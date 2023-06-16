@@ -368,6 +368,7 @@ impl<'a, T: State + StateReader> BusinessLogicSyscallHandler<'a, T> {
         let syscall_name = self.selector_to_syscall.get(&selector).ok_or(
             SyscallHandlerError::SelectorNotInHandlerMap(selector.to_string()),
         )?;
+        dbg!(syscall_name);
 
         let initial_gas: Felt252 = get_big_int(vm, (syscall_ptr + 1)?)?;
         let initial_gas = initial_gas
@@ -634,7 +635,6 @@ where
         vm.insert_value::<Felt252>(res_segment, self.contract_address.0.clone())?;
         res_segment = (res_segment + 1)?;
         vm.insert_value::<Felt252>(res_segment, self.entry_point_selector.clone())?;
-
         Ok(SyscallResponse {
             gas: remaining_gas,
             body: Some(ResponseBody::GetExecutionInfo { exec_info_ptr }),
@@ -647,6 +647,7 @@ where
         request: CallContractRequest,
         remaining_gas: u128,
     ) -> Result<SyscallResponse, SyscallHandlerError> {
+        dbg!(&request);
         let calldata = get_felt_range(vm, request.calldata_start, request.calldata_end)?;
         let execution_entry_point = ExecutionEntryPoint::new(
             request.contract_address,

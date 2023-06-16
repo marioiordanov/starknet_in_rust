@@ -1,3 +1,4 @@
+use starknet_rs::{utils::calculate_sn_keccak, SierraContractClass};
 use std::{
     collections::{HashMap, HashSet},
     path::{Path, PathBuf},
@@ -2400,6 +2401,219 @@ fn library_call_failure() {
         Some(CallType::Delegate),
         Some(class_hash),
         100000,
+    );
+
+    // Execute the entrypoint
+    let block_context = BlockContext::default();
+    let mut tx_execution_context = TransactionExecutionContext::new(
+        Address(0.into()),
+        Felt252::zero(),
+        Vec::new(),
+        0,
+        10.into(),
+        block_context.invoke_tx_max_n_steps(),
+        TRANSACTION_VERSION.clone(),
+    );
+    let mut resources_manager = ExecutionResourcesManager::default();
+    let mut expected_execution_resources = ExecutionResources::default();
+    expected_execution_resources
+        .builtin_instance_counter
+        .insert(RANGE_CHECK_BUILTIN_NAME.to_string(), 7);
+    expected_execution_resources.n_memory_holes = 6;
+
+    let call_info = exec_entry_point
+        .execute(
+            &mut state,
+            &block_context,
+            &mut resources_manager,
+            &mut tx_execution_context,
+            false,
+        )
+        .unwrap();
+    assert_eq!(
+        std::str::from_utf8(&call_info.retdata[0].to_be_bytes())
+            .unwrap()
+            .trim_start_matches('\0'),
+        "Unimplemented"
+    );
+    assert!(call_info.failure_flag);
+}
+
+#[test]
+fn duck_duck() {
+    //  Create program and entry point types for contract class
+    let program_data = include_bytes!("../proxy_contract.json");
+    let sierra_class: SierraContractClass = serde_json::from_slice(program_data).unwrap();
+    let contract_class = CasmContractClass::from_contract_class(sierra_class, false).unwrap();
+    let entrypoint_selector =
+        Felt252::from_bytes_be(&calculate_sn_keccak("__execute__".as_bytes()));
+
+    // Create state reader with class hash data
+    let mut contract_class_cache = HashMap::new();
+
+    let address = Address(felt_str!(
+        "77873968982793223421019657832424040434423608647272643589382819351924744979"
+    ));
+    let class_hash: ClassHash =
+        felt_str!("802624353088231488816884627621717971676208682927435467151080563415187453099")
+            .to_be_bytes();
+    let nonce = 8.into();
+
+    contract_class_cache.insert(class_hash, contract_class);
+    let mut state_reader = InMemoryStateReader::default();
+    state_reader
+        .address_to_class_hash_mut()
+        .insert(address.clone(), class_hash);
+    state_reader
+        .address_to_nonce_mut()
+        .insert(address.clone(), nonce);
+
+    // // Add lib contract to the state
+
+    let program_data = include_bytes!("../contract.json");
+    let sierra_class: SierraContractClass = serde_json::from_slice(program_data).unwrap();
+    let a_contract_class = CasmContractClass::from_contract_class(sierra_class, false).unwrap();
+
+    let a_address = Address(felt_str!(
+        "2580190347992197155439822453898096474131348849780754094111958454284924548879"
+    ));
+    let a_class_hash: ClassHash =
+        felt_str!("842887443104562215789282210875508475757928512615979091764734108797688225873")
+            .to_be_bytes();
+    let a_nonce = 8.into();
+
+    contract_class_cache.insert(a_class_hash, a_contract_class);
+    state_reader
+        .address_to_class_hash_mut()
+        .insert(a_address.clone(), a_class_hash);
+    state_reader
+        .address_to_nonce_mut()
+        .insert(a_address, a_nonce);
+
+    // Create state from the state_reader and contract cache.
+    let mut state = CachedState::new(state_reader, None, Some(contract_class_cache));
+
+    // Create an execution entry point
+    let calldata = [
+        7.into(),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1492333436847995578409168440683494605461205546075485927265435102999436131328"),
+        9.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("150636832903696325546641289108291653851"),
+        felt_str!("2807"),
+        1.into(),
+        0.into(),
+        felt_str!("1686614108162"),
+        2.into(),
+        felt_str!("2838037593421011682040206231115643514351145082096714485433305571877255482573"),
+        felt_str!("576002959559456027292539029984046431986066260421562596972732223346710464473"),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1492333436847995578409168440683494605461205546075485927265435102999436131328"),
+        9.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("60701700828080268569173957296498950203"),
+        3970.into(),
+        1.into(),
+        0.into(),
+        felt_str!("1686614108073"),
+        2.into(),
+        felt_str!("2738970863352631846119294542616503024596973183673754838481598341307340563873"),
+        felt_str!("2289542090749782974873244021798739935713097027878001942657875702161154215818"),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1492333436847995578409168440683494605461205546075485927265435102999436131328"),
+        9.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("186730040080592220962709944354791575751"),
+        3901.into(),
+        1.into(),
+        0.into(),
+        felt_str!("1686614107983"),
+        2.into(),
+        felt_str!("642149337328904143857345936858149148810891643212815928563759075479436902882"),
+        felt_str!("2239263860171003056487104845409108089910217969443805784366359135959640908389"),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1492333436847995578409168440683494605461205546075485927265435102999436131328"),
+        9.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("5594899672282902975493094788360279362"),
+        felt_str!("3951"),
+        1.into(),
+        0.into(),
+        felt_str!("1686614107895"),
+        2.into(),
+        felt_str!("2117980541956216127969187287994655342696369213088562040104464159565197846431"),
+        felt_str!("1718149643841749268075812605501048476772167968852070960593134916233067950887"),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1492333436847995578409168440683494605461205546075485927265435102999436131328"),
+        9.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("72346440218236392623702732007279558860"),
+        95.into(),
+        1.into(),
+        0.into(),
+        felt_str!("1686609367017"),
+        2.into(),
+        felt_str!("2417356759951474636298405104785780039531934595725743038046307112652082895853"),
+        felt_str!("2931732294736423302953169349445495756192133466958844746409896044681482210726"),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1492333436847995578409168440683494605461205546075485927265435102999436131328"),
+        9.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("164035543437603415651599364501344036828"),
+        felt_str!("1901"),
+        1.into(),
+        0.into(),
+        felt_str!("1686606806597"),
+        2.into(),
+        felt_str!("3124104964329003281873145385557057053662725373395617664452733262013059127109"),
+        felt_str!("346724688481333372980882433121536165170847934867308826598344711274471562613"),
+        felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879"),
+        felt_str!("1507885890829902860906790956815692246920905994909660809307241680906695044279"),
+        29.into(),
+        felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"),
+        felt_str!("3287993214422593717072581321321443562923386764694574974403034603715113475772"),
+        6.into(),
+        felt_str!("150636832903696325546641289108291653851"), //79
+        2807.into(),
+        felt_str!("60701700828080268569173957296498950203"),
+        3970.into(),
+        felt_str!("186730040080592220962709944354791575751"),
+        3901.into(),
+        felt_str!("5594899672282902975493094788360279362"),
+        3951.into(),
+        felt_str!("72346440218236392623702732007279558860"),
+        95.into(),
+        felt_str!("164035543437603415651599364501344036828"),
+        1901.into(),
+        6.into(), //91
+        1.into(), //92
+        0.into(), //93
+        1.into(), //94
+        0.into(),
+        1.into(),
+        0.into(), //97
+        1.into(),
+        0.into(),
+        1.into(), //100
+        0.into(),
+        1.into(), //102
+        0.into(),
+        0.into(),
+    ]
+    .to_vec();
+    let caller_address = Address(0000.into());
+    let entry_point_type = EntryPointType::External;
+
+    let exec_entry_point = ExecutionEntryPoint::new(
+        address,
+        calldata,
+        Felt252::new(entrypoint_selector.clone()),
+        caller_address,
+        entry_point_type,
+        Some(CallType::Delegate),
+        Some(class_hash),
+        u128::MAX,
     );
 
     // Execute the entrypoint

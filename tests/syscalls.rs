@@ -1373,3 +1373,157 @@ fn deploy_cairo1_and_invoke() {
     // expected result 3! = 6
     assert_eq!(retdata, [6.into()].to_vec());
 }
+
+// #[test]
+
+// // Tests contract deployed on testnet (contract.json)
+// // addr = 0x05b456031650c1de9eec123d3e7d06a684d321a346d4a7cac9fd86c2b77cf70f
+// // class_hash = 0x1dd0eb0e20cb4736dc868126b612c472ed8d2d70e038f6d6d85df2d9d022051
+// fn duck_duck() {
+//     test_contract_forked(
+//         "contract.json",
+//         "starknet_estimateFee",
+//         felt_str!("1887752743592073342295569789911619442368595574860656543225852103628105196816")
+//             .to_be_bytes(),
+//         Address(felt_str!(
+//             "2927839480580715774465375429448956152791744908488158882036939176796989685312"
+//         )),
+//         Address(0.into()),
+//         BlockContext::default(),
+//         None,
+//         [(
+//             felt_str!(
+//                 "1887752743592073342295569789911619442368595574860656543225852103628105196816"
+//             )
+//             .to_be_bytes(),
+//             Path::new("called_contract2.json"),
+//             Some((
+//                 Address(felt_str!(
+//                     "263695543763493405617330650169868766319168157304458522091616417106659632587"
+//                 )),
+//                 vec![],
+//             )),
+//         )]
+//         .into_iter(),
+//         [
+//             felt_str!(
+//                 "263695543763493405617330650169868766319168157304458522091616417106659632587"
+//             ),
+//             felt_str!(
+//                 "948707291920761125407876017144009399245794260829387925137736792410062867556"
+//             ),
+//             Felt252::from(2),
+//             felt_str!(
+//                 "2927839480580715774465375429448956152791744908488158882036939176796989685312"
+//             ),
+//             Felt252::from(2),
+//         ],
+//     );
+// }
+
+// #[allow(clippy::too_many_arguments)]
+// fn test_contract_forked<'a>(
+//     contract_path: impl AsRef<Path>,
+//     entry_point: &str,
+//     class_hash: ClassHash,
+//     contract_address: Address,
+//     caller_address: Address,
+//     general_config: BlockContext,
+//     tx_context: Option<TransactionExecutionContext>,
+//     extra_contracts: impl Iterator<
+//         Item = (
+//             ClassHash,
+//             &'a Path,
+//             Option<(Address, Vec<(&'a str, Felt252)>)>,
+//         ),
+//     >,
+//     arguments: impl Into<Vec<Felt252>>,
+// ) {
+//     let contract_class = ContractClass::try_from(contract_path.as_ref().to_path_buf())
+//         .expect("Could not load contract from JSON");
+
+//     let mut tx_execution_context = tx_context.unwrap_or_else(|| {
+//         TransactionExecutionContext::create_for_testing(
+//             Address(0.into()),
+//             10,
+//             0.into(),
+//             general_config.invoke_tx_max_n_steps(),
+//             TRANSACTION_VERSION.clone(),
+//         )
+//     });
+
+//     let nonce = tx_execution_context.nonce().clone();
+
+//     let mut state_reader = InMemoryStateReader::default();
+//     state_reader
+//         .address_to_class_hash_mut()
+//         .insert(contract_address.clone(), class_hash);
+//     state_reader
+//         .address_to_nonce_mut()
+//         .insert(contract_address.clone(), nonce);
+//     state_reader
+//         .class_hash_to_contract_class_mut()
+//         .insert(class_hash, contract_class);
+
+//     let mut storage_entries = Vec::new();
+//     let contract_class_cache = {
+//         let mut contract_class_cache = ContractClassCache::new();
+
+//         for (class_hash, contract_path, contract_address) in extra_contracts {
+//             let contract_class = ContractClass::try_from(contract_path.to_path_buf())
+//                 .expect("Could not load extra contract from JSON");
+
+//             contract_class_cache.insert(class_hash, contract_class.clone());
+
+//             if let Some((contract_address, data)) = contract_address {
+//                 storage_entries.extend(data.into_iter().map(|(name, value)| {
+//                     (
+//                         contract_address.clone(),
+//                         calculate_sn_keccak(name.as_bytes()),
+//                         value,
+//                     )
+//                 }));
+
+//                 state_reader
+//                     .address_to_class_hash_mut()
+//                     .insert(contract_address.clone(), class_hash);
+//                 state_reader
+//                     .class_hash_to_contract_class_mut()
+//                     .insert(class_hash, contract_class.clone());
+//             }
+//         }
+
+//         Some(contract_class_cache)
+//     };
+//     let mut state = CachedState::new(state_reader, contract_class_cache, None);
+//     storage_entries
+//         .into_iter()
+//         .for_each(|(a, b, c)| state.set_storage_at(&(a, b), c));
+
+//     let calldata = arguments.into();
+
+//     let entry_point_selector = Felt252::from_bytes_be(&calculate_sn_keccak(entry_point.as_bytes()));
+//     let entry_point = ExecutionEntryPoint::new(
+//         contract_address.clone(),
+//         calldata.clone(),
+//         entry_point_selector.clone(),
+//         caller_address.clone(),
+//         EntryPointType::External,
+//         CallType::Delegate.into(),
+//         Some(class_hash),
+//         0,
+//     );
+
+//     let mut resources_manager = ExecutionResourcesManager::default();
+
+//     let call_info = entry_point
+//         .execute(
+//             &mut state,
+//             &general_config,
+//             &mut resources_manager,
+//             &mut tx_execution_context,
+//             false,
+//         )
+//         .expect("Could not execute contract");
+//     call_info.get_sorted_l2_to_l1_messages().unwrap();
+// }
