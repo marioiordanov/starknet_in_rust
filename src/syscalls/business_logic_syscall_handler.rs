@@ -595,6 +595,7 @@ where
             res_segment = (res_segment + 1)?;
         }
         let signature_end = res_segment;
+        dbg!(&tx_info);
 
         let tx_info_ptr = res_segment;
         vm.insert_value::<Felt252>(res_segment, tx_info.version.clone())?;
@@ -684,9 +685,9 @@ where
                 })),
             });
         }
-
+        dbg!(Felt252::from_bytes_be(&request.key));
         let value = self._storage_read(request.key)?;
-
+        dbg!(&value);
         Ok(SyscallResponse {
             gas: remaining_gas,
             body: Some(ResponseBody::StorageReadResponse { value: Some(value) }),

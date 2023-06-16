@@ -2468,7 +2468,7 @@ fn duck_duck() {
         .address_to_nonce_mut()
         .insert(address.clone(), nonce);
 
-    // // Add lib contract to the state
+    // // Add contract a 
 
     let program_data = include_bytes!("../contract.json");
     let sierra_class: SierraContractClass = serde_json::from_slice(program_data).unwrap();
@@ -2489,6 +2489,28 @@ fn duck_duck() {
     state_reader
         .address_to_nonce_mut()
         .insert(a_address, a_nonce);
+
+        // // Add contract b
+
+        let program_data = include_bytes!("../contract_b.json");
+        let sierra_class: SierraContractClass = serde_json::from_slice(program_data).unwrap();
+        let a_contract_class = CasmContractClass::from_contract_class(sierra_class, false).unwrap();
+    
+        let a_address = Address(felt_str!(
+            "2130449614087309992146828810340965483383114570091747539799843737140266351087"
+        ));
+        let a_class_hash: ClassHash =
+            felt_str!("802624353088231488816884627621717971676208682927435467151080563415187453099")
+                .to_be_bytes();
+        let a_nonce = 8.into();
+    
+        contract_class_cache.insert(a_class_hash, a_contract_class);
+        state_reader
+            .address_to_class_hash_mut()
+            .insert(a_address.clone(), a_class_hash);
+        state_reader
+            .address_to_nonce_mut()
+            .insert(a_address, a_nonce);
 
     // Create state from the state_reader and contract cache.
     let mut state = CachedState::new(state_reader, None, Some(contract_class_cache));
@@ -2602,7 +2624,7 @@ fn duck_duck() {
         0.into(),
     ]
     .to_vec();
-    let caller_address = Address(0000.into());
+    let caller_address = Address(felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"));
     let entry_point_type = EntryPointType::External;
 
     let exec_entry_point = ExecutionEntryPoint::new(
@@ -2619,7 +2641,7 @@ fn duck_duck() {
     // Execute the entrypoint
     let block_context = BlockContext::default();
     let mut tx_execution_context = TransactionExecutionContext::new(
-        Address(0.into()),
+        Address(felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979")),
         Felt252::zero(),
         Vec::new(),
         0,
