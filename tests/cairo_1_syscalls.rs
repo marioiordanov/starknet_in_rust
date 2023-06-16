@@ -1,4 +1,4 @@
-use starknet_rs::{utils::calculate_sn_keccak, SierraContractClass};
+use starknet_rs::{utils::calculate_sn_keccak, SierraContractClass, state::state_api::State};
 use std::{
     collections::{HashMap, HashSet},
     path::{Path, PathBuf},
@@ -2514,6 +2514,9 @@ fn duck_duck() {
 
     // Create state from the state_reader and contract cache.
     let mut state = CachedState::new(state_reader, None, Some(contract_class_cache));
+    // Modify initial storage 
+    state.set_storage_at(&(Address(felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879")), felt_str!("726437735609465456221959427038381779701227023503434447159646021870698869149").to_be_bytes()), 0.into());//Voucher already consumed if != 0
+    state.set_storage_at(&(Address(felt_str!("2580190347992197155439822453898096474131348849780754094111958454284924548879")), felt_str!("734672039512761575568863236455483803451257198513249577061687613591787367865").to_be_bytes()), felt_str!("2130449614087309992146828810340965483383114570091747539799843737140266351087")); //Hardcoded according to internal calls on starkscan
 
     // Create an execution entry point
     let calldata = [
@@ -2624,7 +2627,7 @@ fn duck_duck() {
         0.into(),
     ]
     .to_vec();
-    let caller_address = Address(felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979"));
+    let caller_address = Address(0.into());
     let entry_point_type = EntryPointType::External;
 
     let exec_entry_point = ExecutionEntryPoint::new(
@@ -2641,7 +2644,9 @@ fn duck_duck() {
     // Execute the entrypoint
     let block_context = BlockContext::default();
     let mut tx_execution_context = TransactionExecutionContext::new(
-        Address(felt_str!("77873968982793223421019657832424040434423608647272643589382819351924744979")),
+        Address(felt_str!(
+            "77873968982793223421019657832424040434423608647272643589382819351924744979"
+        )),
         Felt252::zero(),
         Vec::new(),
         0,
