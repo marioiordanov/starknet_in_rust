@@ -20,6 +20,7 @@ pub type FeeInfo = (Option<CallInfo>, u128);
 
 /// Transfers the amount actual_fee from the caller account to the sequencer.
 /// Returns the resulting CallInfo of the transfer call.
+#[allow(dead_code)]
 pub(crate) fn execute_fee_transfer<S: State + StateReader>(
     state: &mut S,
     block_context: &BlockContext,

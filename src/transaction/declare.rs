@@ -16,7 +16,7 @@ use crate::{
     state::ExecutionResourcesManager,
     transaction::{
         error::TransactionError,
-        fee::{calculate_tx_fee, execute_fee_transfer, FeeInfo},
+        fee::{calculate_tx_fee, FeeInfo},
     },
     utils::{
         calculate_tx_resources, felt_to_hash, verify_no_calls_to_other_contracts, Address,
@@ -206,7 +206,7 @@ impl Declare {
     /// Calculates and charges the actual fee.
     pub fn charge_fee<S: State + StateReader>(
         &self,
-        state: &mut S,
+        _state: &mut S,
         resources: &HashMap<String, usize>,
         block_context: &BlockContext,
     ) -> Result<FeeInfo, TransactionError> {
@@ -220,12 +220,12 @@ impl Declare {
             block_context,
         )?;
 
-        let mut tx_execution_context =
-            self.get_execution_context(block_context.invoke_tx_max_n_steps);
-        let fee_transfer_info =
-            execute_fee_transfer(state, block_context, &mut tx_execution_context, actual_fee)?;
+        // let mut tx_execution_context =
+        //     self.get_execution_context(block_context.invoke_tx_max_n_steps);
+        // let fee_transfer_info =
+        //     execute_fee_transfer(state, block_context, &mut tx_execution_context, actual_fee)?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+        Ok((None, actual_fee))
     }
 
     fn handle_nonce<S: State + StateReader>(&self, state: &mut S) -> Result<(), TransactionError> {
