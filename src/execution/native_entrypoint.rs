@@ -11,8 +11,23 @@ use crate::{
 use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::program::Program as SierraProgram;
 use cairo_native::easy::compile_and_execute;
-use cairo_vm::felt::Felt252;
+use cairo_vm::{felt::Felt252, vm::runners::cairo_runner::ExecutionResources};
 use serde_json::json;
+use num_traits::One;
+use num_traits::Zero;
+
+#[derive(Debug)]
+struct CairoNativeParams(Option<u64>, u64, Vec<u64>);
+
+impl CairoNativeParams {
+    pub fn to_json(&self) -> serde_json::Value {
+        json!([
+            self.0,
+            self.1,
+            ..self.2
+        ])
+    }
+}
 
 pub struct NativeEntryPoint {
     pub contract_address: Address,
@@ -62,7 +77,7 @@ impl NativeEntryPoint {
             .funcs
             .iter()
             .find(|x| {
-                x.id.debug_name.as_deref() == function_id_by_selector(self.entrypoint_selector)
+                x.id.debug_name.as_deref() == function_id_by_selector(self.entrypoint_selector).as_deref()
             })
             .unwrap()
             .id;
@@ -95,7 +110,7 @@ impl NativeEntryPoint {
             .expect("Failed to deserialize result");
         // TODO: Ask cairo_native team to return an array of 32 u8s
         let result = deserialized_value[2][1][0][0].as_u64().unwrap();
-        let result_felt: Felt252 = result.into();
+        let result_felt: Vec<Felt252> = vec![result.into()];
         // Create a CallInfo using the result from cairo_native
         Ok(CallInfo {
             caller_address: self.caller_address,
@@ -120,10 +135,12 @@ impl NativeEntryPoint {
 }
 
 /// TODO: we should fix this
-fn function_id_by_selector(selector: Felt252) -> Option<str> {
+fn function_id_by_selector(selector: Felt252) -> Option<String> {
+    let zero = Felt252::zero();
+    let one = Felt252::one();
     match selector {
-        Felt::zero() => Some("fib_contract::fib_contract::Fibonacci::fib"),
-        Felt::one() => Some(""),
+        zero => Some("fib_contract::fib_contract::Fibonacci::fib".into()),
+        one => Some("".into()),
         _ => None
     }
     
