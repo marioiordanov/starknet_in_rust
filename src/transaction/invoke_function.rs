@@ -10,8 +10,8 @@ use crate::{
         transaction_type::TransactionType,
     },
     execution::{
-        execution_entry_point::ExecutionEntryPoint, CallInfo, TransactionExecutionContext,
-        TransactionExecutionInfo,
+        execution_entry_point::ExecutionEntryPoint, native_entrypoint::NativeEntryPoint, CallInfo,
+        TransactionExecutionContext, TransactionExecutionInfo,
     },
     state::state_api::{State, StateReader},
     state::ExecutionResourcesManager,
@@ -50,6 +50,8 @@ pub struct InvokeFunction {
     skip_validation: bool,
     skip_execute: bool,
     skip_fee_transfer: bool,
+    #[allow(dead_code)]
+    is_native: bool,
 }
 
 impl InvokeFunction {
@@ -120,7 +122,37 @@ impl InvokeFunction {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         })
+    }
+
+    pub fn new_native(
+        contract_address: Address,
+        entry_point_selector: Felt252,
+        max_fee: u128,
+        version: Felt252,
+        calldata: Vec<Felt252>,
+        nonce: Option<Felt252>,
+    ) -> Self {
+        let validate_entry_point_selector = VALIDATE_ENTRY_POINT_SELECTOR.clone();
+
+        Self {
+            contract_address,
+            entry_point_selector,
+            entry_point_type: EntryPointType::External,
+            calldata,
+            tx_type: TransactionType::InvokeFunction,
+            version,
+            validate_entry_point_selector,
+            hash_value: Felt252::zero(),
+            signature: vec![],
+            max_fee,
+            nonce,
+            skip_validation: true,
+            skip_execute: false,
+            skip_fee_transfer: true,
+            is_native: true,
+        }
     }
 
     fn get_execution_context(
@@ -222,6 +254,33 @@ impl InvokeFunction {
         )
     }
 
+    fn run_native_entrypoint<T>(
+        &self,
+        state: &mut T,
+        block_context: &BlockContext,
+        resources_manager: &mut ExecutionResourcesManager,
+        remaining_gas: u128,
+    ) -> Result<CallInfo, TransactionError>
+    where
+        T: State + StateReader,
+    {
+        let call = NativeEntryPoint::new(
+            self.contract_address.clone(),
+            self.calldata.clone(),
+            self.entry_point_selector.clone(),
+            Address(0.into()),
+            remaining_gas,
+        );
+        // call.execute(
+        //     state,
+        //     block_context,
+        //     resources_manager,
+        //     &mut self.get_execution_context(block_context.invoke_tx_max_n_steps)?,
+        //     false,
+        // )
+        todo!()
+    }
+
     /// Execute a call to the cairo-vm using the accounts_validation.cairo contract to validate
     /// the contract that is being declared. Then it returns the transaction execution info of the run.
     /// ## Parameters
@@ -244,12 +303,21 @@ impl InvokeFunction {
         let call_info = if self.skip_execute {
             None
         } else {
-            Some(self.run_execute_entrypoint(
-                state,
-                block_context,
-                &mut resources_manager,
-                remaining_gas,
-            )?)
+            if self.is_native {
+                Some(self.run_native_entrypoint(
+                    state,
+                    block_context,
+                    &mut resources_manager,
+                    remaining_gas,
+                )?)
+            } else {
+                Some(self.run_execute_entrypoint(
+                    state,
+                    block_context,
+                    &mut resources_manager,
+                    remaining_gas,
+                )?)
+            }
         };
         let changes = state.count_actual_storage_changes();
         let actual_resources = calculate_tx_resources(
@@ -447,6 +515,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -515,6 +584,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -579,6 +649,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -637,6 +708,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -701,6 +773,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -775,6 +848,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         let mut state = CachedState::new(state_reader.clone(), None, None);
@@ -819,6 +893,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -883,6 +958,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState
@@ -945,6 +1021,7 @@ mod tests {
             skip_validation: false,
             skip_execute: false,
             skip_fee_transfer: false,
+            is_native: false,
         };
 
         // Instantiate CachedState

@@ -1,5 +1,6 @@
 pub mod execution_entry_point;
 pub mod gas_usage;
+pub mod native_entrypoint;
 pub mod os_usage;
 
 use crate::definitions::constants::QUERY_VERSION_BASE;

@@ -127,9 +127,11 @@ $(cairo-repo-2-dir):
 # =================
 # Normal rules.
 # =================
+init:
+	rustup override set nightly-2023-06-19-aarch64-apple-darwin
 
 build: compile-cairo compile-starknet
-	cargo build --release --all
+	export MLIR_SYS_160_PREFIX=/opt/homebrew/opt/llvm@16 && cargo build --release --all
 
 check: compile-cairo compile-starknet
 	cargo check --all --all-targets

@@ -10,6 +10,7 @@ use crate::{
     },
     utils::{Address, ClassHash, CompiledClassHash},
 };
+use cairo_lang_sierra::program::Program as SierraProgram;
 use cairo_vm::felt::Felt252;
 use getset::{Getters, MutGetters};
 use std::collections::HashMap;
@@ -32,6 +33,8 @@ pub struct InMemoryStateReader {
     pub(crate) casm_contract_classes: CasmClassCache,
     #[getset(get_mut = "pub")]
     pub(crate) class_hash_to_compiled_class_hash: HashMap<ClassHash, CompiledClassHash>,
+    #[getset(get_mut = "pub")]
+    pub(crate) class_hash_to_sierra_class: HashMap<ClassHash, SierraProgram>,
 }
 
 impl InMemoryStateReader {
@@ -51,6 +54,7 @@ impl InMemoryStateReader {
         class_hash_to_contract_class: HashMap<ClassHash, ContractClass>,
         casm_contract_classes: CasmClassCache,
         class_hash_to_compiled_class_hash: HashMap<ClassHash, CompiledClassHash>,
+        class_hash_to_sierra_class: HashMap<ClassHash, SierraProgram>,
     ) -> Self {
         Self {
             address_to_class_hash,
@@ -59,6 +63,7 @@ impl InMemoryStateReader {
             class_hash_to_contract_class,
             casm_contract_classes,
             class_hash_to_compiled_class_hash,
+            class_hash_to_sierra_class,
         }
     }
 
@@ -89,6 +94,17 @@ impl InMemoryStateReader {
 }
 
 impl StateReader for InMemoryStateReader {
+    fn get_sierra_class(&mut self, class_hash: &ClassHash) -> Result<SierraProgram, StateError> {
+        self.class_hash_to_sierra_class
+            .get(class_hash)
+            .cloned()
+            .ok_or_else(|| {
+                StateError::CustomError(format!(
+                    "Failed to retrieve Sierra contract class for class_hash: {:?}",
+                    class_hash
+                ))
+            })
+    }
     fn get_class_hash_at(&mut self, contract_address: &Address) -> Result<ClassHash, StateError> {
         let class_hash = self
             .address_to_class_hash
@@ -151,6 +167,7 @@ mod tests {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
         );
 
         let contract_address = Address(37810.into());
@@ -183,6 +200,7 @@ mod tests {
     #[test]
     fn get_contract_class_test() {
         let mut state_reader = InMemoryStateReader::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

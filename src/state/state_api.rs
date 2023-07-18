@@ -7,6 +7,7 @@ use crate::{
     state::StateDiff,
     utils::{Address, ClassHash, CompiledClassHash},
 };
+use cairo_lang_sierra::program::Program as SierraProgram;
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_vm::felt::Felt252;
 
@@ -24,6 +25,8 @@ pub trait StateReader {
         &mut self,
         class_hash: &ClassHash,
     ) -> Result<CompiledClassHash, StateError>;
+    /// Fetches the sierra contract class from the state
+    fn get_sierra_class(&mut self, class_hash: &ClassHash) -> Result<SierraProgram, StateError>;
 }
 
 pub trait State {

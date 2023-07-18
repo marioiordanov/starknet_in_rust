@@ -10,6 +10,7 @@ use crate::{
     state::StateDiff,
     utils::{subtract_mappings, to_cache_state_storage_mapping, Address, ClassHash},
 };
+use cairo_lang_sierra::program::Program as SierraProgram;
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_vm::felt::Felt252;
 use getset::{Getters, MutGetters};
@@ -82,6 +83,9 @@ impl<T: StateReader> CachedState<T> {
 }
 
 impl<T: StateReader> StateReader for CachedState<T> {
+    fn get_sierra_class(&mut self, class_hash: &ClassHash) -> Result<SierraProgram, StateError> {
+        self.state_reader.get_sierra_class(class_hash)
+    }
     fn get_class_hash_at(&mut self, contract_address: &Address) -> Result<ClassHash, StateError> {
         if self.cache.get_class_hash(contract_address).is_none() {
             let class_hash = match self.state_reader.get_class_hash_at(contract_address) {
