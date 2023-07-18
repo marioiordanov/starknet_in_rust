@@ -12,22 +12,11 @@ use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::program::Program as SierraProgram;
 use cairo_native::easy::compile_and_execute;
 use cairo_vm::{felt::Felt252, vm::runners::cairo_runner::ExecutionResources};
-use serde_json::json;
-use num_traits::One;
-use num_traits::Zero;
+use num_traits::ToPrimitive;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
-struct CairoNativeParams(Option<u64>, u64, Vec<u64>);
-
-impl CairoNativeParams {
-    pub fn to_json(&self) -> serde_json::Value {
-        json!([
-            self.0,
-            self.1,
-            ..self.2
-        ])
-    }
-}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CairoNativeParams(Option<u64>, u64, Vec<u64>);
 
 pub struct NativeEntryPoint {
     pub contract_address: Address,
@@ -71,20 +60,26 @@ impl NativeEntryPoint {
         let mut writer: Vec<u8> = Vec::new();
         let mut res = serde_json::Serializer::new(&mut writer);
         // only range_check and gas (TODO: ask RJ about range_check)
-        let mut calldata = [null, 9000];
-        calldata.to_vec().extend(self.calldata);
+        let u64_calldata = self
+            .calldata
+            .clone()
+            .into_iter()
+            .map(|x| x.to_u64().unwrap())
+            .collect();
+        let calldata = CairoNativeParams(None, 9000, u64_calldata);
         let function_id = &program
             .funcs
             .iter()
             .find(|x| {
-                x.id.debug_name.as_deref() == function_id_by_selector(self.entrypoint_selector).as_deref()
+                x.id.debug_name.as_deref()
+                    == function_id_by_selector(self.entrypoint_selector.clone()).as_deref()
             })
             .unwrap()
             .id;
         compile_and_execute::<CoreType, CoreLibfunc, _, _>(
             &program,
             function_id,
-            json!(calldata),
+            serde_json::to_value(calldata).unwrap(),
             &mut res,
         )
         .unwrap();
@@ -113,12 +108,12 @@ impl NativeEntryPoint {
         let result_felt: Vec<Felt252> = vec![result.into()];
         // Create a CallInfo using the result from cairo_native
         Ok(CallInfo {
-            caller_address: self.caller_address,
+            caller_address: self.caller_address.clone(),
             call_type: None,
-            contract_address: self.contract_address,
+            contract_address: self.contract_address.clone(),
             code_address: None,
             class_hash: Some(class_hash.clone()),
-            entry_point_selector: Some(self.entrypoint_selector),
+            entry_point_selector: Some(self.entrypoint_selector.clone()),
             entry_point_type: None,
             calldata: self.calldata.clone(),
             retdata: result_felt,
@@ -136,12 +131,24 @@ impl NativeEntryPoint {
 
 /// TODO: we should fix this
 fn function_id_by_selector(selector: Felt252) -> Option<String> {
-    let zero = Felt252::zero();
-    let one = Felt252::one();
-    match selector {
-        zero => Some("fib_contract::fib_contract::Fibonacci::fib".into()),
-        one => Some("".into()),
-        _ => None
+    if selector == 0.into() {
+        Some("fib_contract::fib_contract::Fibonacci::fib".into())
+    } else if selector == 1.into() {
+        Some("".into())
+    } else {
+        None
     }
-    
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CairoNativeParams;
+
+    #[test]
+    fn cairo_native_params_serialization() {
+        let params = CairoNativeParams(None, 9000, vec![10, 10, 10]);
+        let serialized = serde_json::to_string(&params).unwrap();
+
+        assert_eq!("[null,9000,[10,10,10]]".to_string(), serialized);
+    }
 }

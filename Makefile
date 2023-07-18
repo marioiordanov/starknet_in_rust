@@ -133,6 +133,9 @@ init:
 build: compile-cairo compile-starknet
 	export MLIR_SYS_160_PREFIX=/opt/homebrew/opt/llvm@16 && cargo build --release --all
 
+native_test:
+	export MLIR_SYS_160_PREFIX=/opt/homebrew/opt/llvm@16 && cargo test --release --all
+
 check: compile-cairo compile-starknet
 	cargo check --all --all-targets
 

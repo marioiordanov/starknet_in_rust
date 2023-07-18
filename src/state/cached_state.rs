@@ -355,6 +355,7 @@ mod tests {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
         );
 
         let contract_address = Address(4242.into());
@@ -396,6 +397,7 @@ mod tests {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
         );
         let contract_class =
             ContractClass::from_path("starknet_programs/raw_contract_classes/class_with_abi.json")
@@ -429,6 +431,7 @@ mod tests {
                 HashMap::new(),
                 HashMap::new(),
                 HashMap::new(),
+                HashMap::new(),
             ),
             None,
             None,
@@ -456,6 +459,7 @@ mod tests {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
         );
 
         let contract_address = Address(32123.into());
@@ -470,6 +474,7 @@ mod tests {
     #[test]
     fn get_and_set_storage() {
         let state_reader = InMemoryStateReader::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
@@ -509,6 +514,7 @@ mod tests {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
         );
         let mut cached_state = CachedState::new(state_reader, None, None);
 
@@ -523,6 +529,7 @@ mod tests {
     #[test]
     fn deploy_contract_address_out_of_range_error_test() {
         let state_reader = InMemoryStateReader::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
@@ -548,6 +555,7 @@ mod tests {
     #[test]
     fn deploy_contract_address_in_use_error_test() {
         let state_reader = InMemoryStateReader::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
@@ -582,6 +590,7 @@ mod tests {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
+            HashMap::new(),
         );
 
         let contract_address = Address(32123.into());
@@ -605,6 +614,7 @@ mod tests {
     #[test]
     fn cached_state_apply_state_update() {
         let state_reader = InMemoryStateReader::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

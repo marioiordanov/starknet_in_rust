@@ -271,14 +271,13 @@ impl InvokeFunction {
             Address(0.into()),
             remaining_gas,
         );
-        // call.execute(
-        //     state,
-        //     block_context,
-        //     resources_manager,
-        //     &mut self.get_execution_context(block_context.invoke_tx_max_n_steps)?,
-        //     false,
-        // )
-        todo!()
+        call.execute(
+            state,
+            block_context,
+            resources_manager,
+            &mut self.get_execution_context(block_context.invoke_tx_max_n_steps)?,
+            false,
+        )
     }
 
     /// Execute a call to the cairo-vm using the accounts_validation.cairo contract to validate
